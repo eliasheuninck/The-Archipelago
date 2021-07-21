@@ -1,5 +1,6 @@
 /*
-  WO 10
+  The Archipelago
+  (Equivalent to WO 10)
 
   CONFIGURE BEFORE RUNNING
   - Set Module[][5] motor debug enable according to which rails are attached
