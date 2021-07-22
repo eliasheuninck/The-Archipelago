@@ -87,6 +87,7 @@ byte previousState = 255; // don't change this. (255 is the highest valueof a by
 //  4: all at once (motor and LED on, when button pressed)
 //  5: homing
 //  6: find rail length by pressing the motor switch (terminal necessary)
+//  7: receive I2C communication
 const byte hardwareTest_id = 4;
 
 
@@ -483,7 +484,7 @@ Bounce limitSwitch_debouncer[12] = {
 # include <Wire.h>
 # define I2C_ADDRESS 8 // hexadecimal: 0x8 is decimal 8. This is the first available I2C address
 volatile bool I2C_dataReceived = false;
-volatile byte I2C_numberOfDigits;
+volatile byte I2C_numberOfDigits = 0;
 volatile byte I2C_byteBuffer[10] = "";
 int videoTime = 0; // video time in millisec (this datatype is large enough for the running time of the video).
 int previousVideoTime = 0;

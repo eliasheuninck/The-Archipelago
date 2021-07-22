@@ -243,5 +243,5 @@ void play() { // state 0
     //
     //      // goto startpos
     //    }
-  }
+  } // close else (the end)
 }
