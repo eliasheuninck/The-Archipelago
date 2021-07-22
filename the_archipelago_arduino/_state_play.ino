@@ -1,18 +1,16 @@
 // program flow: states
-// 0 = idling
-// 2 = start positions
-// 3 = Synchronise, wait for video start
-// 4 = ### play ###
-// 5 = test
+// 0 = ### play ###
+// 1 = test
 
 #include "Arduino.h"
 
 
-void play() { // state 4
+void play() { // state 0
   if (state != previousState) { // one-trigger
     Serial.println();
     Serial.println("PLAY");
     delay(10);
+
 
     // set high acceleration params to all motors
     for (byte i = 0; i < 12; i++) {
@@ -159,7 +157,7 @@ void play() { // state 4
 
 
       }
-      
+
       // poll all flagged motors
       for (byte i = 0; i < 12; i++) {
         //        I2C_process_data(); // check for received I2C data

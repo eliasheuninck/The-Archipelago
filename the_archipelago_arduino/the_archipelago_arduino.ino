@@ -73,12 +73,9 @@
 // ****************
 
 // program flow: states
-// 0 = idling
-// 2 = start positions
-// 3 = Synchronise, wait for video start
-// 4 = play
-// 5 = test / configure
-byte state = 4;
+// 0 = play
+// 1 = test / configure
+byte state = 0;
 byte previousState = 255; // don't change this. (255 is the highest valueof a byte. I use it as initializing value to be out of range)
 
 

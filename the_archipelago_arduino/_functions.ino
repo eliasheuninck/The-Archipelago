@@ -1,25 +1,11 @@
-// program flow: functions
-// 0 = idling
-// 2 = start positions
-// 3 = Synchronise, wait for video start
-// 4 = play
-// 5 = ### test ###
-
 #include "Arduino.h"
 
 // program flow: states
-// 0 = idling
-// 2 = start positions
-// 3 = Synchronise, wait for video start
-// 4 = play
-// 5 = test
-
+// 0 = play
+// 1 = test
 void statePoll() {
-  if      (state == 0) idling();
-  else if (state == 2) startPos();
-  else if (state == 3) sync();
-  else if (state == 4) play();
-  else if (state == 5) test();
+  if (state == 0) play();
+  else if (state == 1) test();
 }
 
 
@@ -434,7 +420,7 @@ void moduleTest_full () {
 
 
 
-// Motor test - full rail lentgh
+// Motor test - full rail length
 // run motor when button pressed
 void moduleTest_railLength () {
 

@@ -1,14 +1,11 @@
 // program flow: states
-// 0 = idling
-// 2 = start positions
-// 3 = Synchronise, wait for video start
-// 4 = play
-// 5 = ### test ###
+// 0 = play
+// 1 = ### test ###
 
 #include "Arduino.h"
 
 
-void test() { // state 5
+void test() { // state 1
   if (state != previousState) { // one-trigger
     Serial.println("Test-state enabled");
     switch (hardwareTest_id) {
@@ -118,6 +115,10 @@ void test() { // state 5
 
     case 6: // Find rail length
       findRailLength();
+      break;
+
+    case 7: // Display I2C communication
+      I2C_process_data();
       break;
 
   }
