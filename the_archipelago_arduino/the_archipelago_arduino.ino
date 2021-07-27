@@ -299,7 +299,8 @@ int module[][8] = {
     // Pin 28 is available, but not used. Purely to avoid weird things happening when for-looping over the motor[] array.
     /* 3 */ 19, // motor step pin     (!) (stationary LED only, no motor or switches here)
     /* 4 */ 18, // motor dir pin      (!) (stationary LED only, no motor or switches here)
-    /* 5 */ 0, // == 0 —— motor debug enable (enable or disable motor (for debugging)). Since no motor, leave at zero
+    /* 5 */ 1,  // motor debug enable (enable or disable motor (for debugging)).
+                // Leave at 1, even though there's no motor attached
     /* 6 */ 111, // rail length (in motorsteps). (!) dummy value here
     /* 7 */ 0, // poll motor
   },

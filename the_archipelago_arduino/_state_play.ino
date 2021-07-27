@@ -14,8 +14,10 @@ void play() { // state 0
 
     // set high acceleration params to all motors
     for (byte i = 0; i < 12; i++) {
-      motor[i].setMaxSpeed(4000);
-      motor[i].setAcceleration(160000); // previous value: 40000
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
+        motor[i].setMaxSpeed(4000);
+        motor[i].setAcceleration(160000); // previous value: 40000
+      }
     }
 
     // set up the starting configuration in 'state_startpos'. LED's all off.
@@ -143,41 +145,37 @@ void play() { // state 0
         }
 
 
-        Serial.println();
-        Serial.print("KF_");
-        Serial.println(currentKeyframe);
-        Serial.print("— fr: ");
-        Serial.println(keyframe[currentKeyframe][0]);
-        Serial.print("— ms: ");
-        Serial.println(frameToMs(keyframe[currentKeyframe][0]));
-        Serial.println();
+        // Serial.println();
+        // Serial.print("KF_");
+        // Serial.println(currentKeyframe);
+        // Serial.print("— fr: ");
+        // Serial.println(keyframe[currentKeyframe][0]);
+        // Serial.print("— ms: ");
+        // Serial.println(frameToMs(keyframe[currentKeyframe][0]));
+        // Serial.println();
 
         currentKeyframe++;
-
-
       }
 
       // poll all flagged motors
       for (byte i = 0; i < 12; i++) {
-        //        I2C_process_data(); // check for received I2C data
-        if (module[i][7] == 1) {
-          motor[i].run();
-          if (motor[i].distanceToGo() == 0) { // when a motor ended its run
-            motor_disable(i); // disable power
-            module[i][7] = 0; // clear the poll flag, so it won't take up time being polled
+        if (i != 5) { // skip module 5 at connector 4 (only LED)
+          //        I2C_process_data(); // check for received I2C data
+          if (module[i][7] == 1) {
+            motor[i].run();
+            if (motor[i].distanceToGo() == 0) { // when a motor ended its run
+              motor_disable(i); // disable power
+              module[i][7] = 0; // clear the poll flag, so it won't take up time being polled
 
-            // DISABLED FOR LESS SERIAL OVERLOAD -- DEBUGGING
-            // Serial.print("- motor ");
-            // Serial.print(i);
-            // Serial.println(" arrived");
+              // DISABLED FOR LESS SERIAL OVERLOAD -- DEBUGGING
+              // Serial.print("- motor ");
+              // Serial.print(i);
+              // Serial.println(" arrived");
+            }
           }
         }
       }
-
-
-
     }
-
   }
 
 
@@ -191,56 +189,58 @@ void play() { // state 0
         if (module[i][7] == 1) {
           motor[i].run();
           if (motor[i].distanceToGo() == 0) { // when a motor ended it's run
-            motor_disable(i); // disable power
-            module[i][7] = 0; // clear the poll flag, so it won't take up time being polled
-            Serial.print("- motor ");
-            Serial.print(i);
-            Serial.println(" arrived");
-          }
-        }
-      }
-
-      // re-check if there are still motor-poll-flags set still
-      stillRunning = 0;
-      for (byte i = 0; i < 12; i++) {
-        if (module[i][7] == 1) {
-          stillRunning = 1;
+          motor_disable(i); // disable power
+          module[i][7] = 0; // clear the poll flag, so it won't take up time being polled
+          Serial.print("- motor ");
+          Serial.print(i);
+          Serial.println(" arrived");
         }
       }
     }
 
-    Serial.println();
-    Serial.print("The end, at keyframe ");
-    Serial.println(currentKeyframe);
-    // motors are all at zero now (as configured in the keyframes)
-
-    motorsGoHome();
-    goToStartPos();
-
-    // disable motors
+    // re-check if there are still motor-poll-flags set still
+    stillRunning = 0;
     for (byte i = 0; i < 12; i++) {
+      if (module[i][7] == 1) {
+        stillRunning = 1;
+      }
+    }
+  }
+
+  Serial.println();
+  Serial.print("The end, at keyframe ");
+  Serial.println(currentKeyframe);
+  // motors are all at zero now (as configured in the keyframes)
+
+  motorsGoHome();
+  goToStartPos();
+
+  // disable motors
+  for (byte i = 0; i < 12; i++) {
+    if (i != 5) { // skip module 5 at connector 4 (only LED)
       motor_disable(i);
     }
+  }
 
-    Serial.println("Detect loop point");
-    // Detect loop point
-    bool looped = false;
-    while (looped == false) {
-      I2C_process_data(); // check for received I2C data
-      if (videoTime < 500) {
-        // reset currentKeyframe to 12 in order to be ready for the next loop
-        currentKeyframe = 12;
-        looped = true;
-      }
+  Serial.println("Detect loop point");
+  // Detect loop point
+  bool looped = false;
+  while (looped == false) {
+    I2C_process_data(); // check for received I2C data
+    if (videoTime < 500) {
+      // reset currentKeyframe to 12 in order to be ready for the next loop
+      currentKeyframe = 12;
+      looped = true;
     }
+  }
 
 
-    //    while (true) {
-    //      //      Serial.println("PROGRAM STOPPED");
-    //      //      delay(1000); // TODO: now the arduino just waits after a single run. It should reset and be ready to receive the timestamp-stream from Rpi
-    //      // reset currentKeyframe to 12
-    //
-    //      // goto startpos
-    //    }
-  } // close else (the end)
+  //    while (true) {
+  //      //      Serial.println("PROGRAM STOPPED");
+  //      //      delay(1000); // TODO: now the arduino just waits after a single run. It should reset and be ready to receive the timestamp-stream from Rpi
+  //      // reset currentKeyframe to 12
+  //
+  //      // goto startpos
+  //    }
+} // close else (the end)
 }

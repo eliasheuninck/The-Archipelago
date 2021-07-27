@@ -11,7 +11,9 @@ void statePoll() {
 
 void stopAllMotors() {
   for (byte i = 0; i < 12; i++) {
-    motor[i].stop();
+    if (i != 5) { // skip module 5 at connector 4 (only LED)
+      motor[i].stop();
+    }
   }
   // Serial.println("All motors stopped");
 }
@@ -50,44 +52,52 @@ void setupPowerLEDS() {
 
 void setupLimitSwitches() {
   for (byte i = 0; i < 12; i++) {
-    pinMode(module[i][1], INPUT_PULLUP); // Setup button with internal pull-up
-    limitSwitch_debouncer[i].attach(module[i][1]); // After setting up the button, setup the Bounce instance
-    limitSwitch_debouncer[i].interval(5); // interval in ms
+    if (i != 5) { // skip module 5 at connector 4 (only LED)
+      pinMode(module[i][1], INPUT_PULLUP); // Setup button with internal pull-up
+      limitSwitch_debouncer[i].attach(module[i][1]); // After setting up the button, setup the Bounce instance
+      limitSwitch_debouncer[i].interval(5); // interval in ms
+    }
   }
 }
 
 
 void setupMotors() {
   for (byte i = 0; i < 12; i++) {
-    // pinMode(module[i][2], OUTPUT); // motor enable pin
-    motor[i].setEnablePin(module[i][2]);
+    if (i != 5) { // skip module 5 at connector 4 (only LED)
+      // pinMode(module[i][2], OUTPUT); // motor enable pin
+      motor[i].setEnablePin(module[i][2]);
 
-    // Reverse direction for normal operation
-    // Except module 5: the glider of WO_04_rail_1 grips the PU belt on the other side. Do not reverse the motion here.
-    // true = inverted
-    // false = non-inverted
-    // https://www.airspayce.com/mikem/arduino/AccelStepper/classAccelStepper.html#ac62cae590c2f9c303519a3a1c4adc8ab
-    motor[i].setPinsInverted(true, false, true); // directionInvert, stepInvert, enableInvert
+      // Reverse direction for normal operation
+      // Except module 5: the glider of WO_04_rail_1 grips the PU belt on the other side. Do not reverse the motion here.
+      // true = inverted
+      // false = non-inverted
+      // https://www.airspayce.com/mikem/arduino/AccelStepper/classAccelStepper.html#ac62cae590c2f9c303519a3a1c4adc8ab
+      motor[i].setPinsInverted(true, false, true); // directionInvert, stepInvert, enableInvert
 
-    if (i == 4) {
-      motor[i].setPinsInverted(false, false, true); // directionInvert, stepInvert, enableInvert
+      if (i == 4) {
+        motor[i].setPinsInverted(false, false, true); // directionInvert, stepInvert, enableInvert
+      }
+
+      pinMode(module[i][3], OUTPUT); // step pin
+      pinMode(module[i][4], OUTPUT); // dir pin
+
+      // Configure each stepper motor
+      motor[i].setMaxSpeed(1000);
+      motor[i].setAcceleration(10000);
     }
-
-    pinMode(module[i][3], OUTPUT); // step pin
-    pinMode(module[i][4], OUTPUT); // dir pin
-
-    // Configure each stepper motor
-    motor[i].setMaxSpeed(1000);
-    motor[i].setAcceleration(10000);
   }
 }
 
 void motor_enable (byte moduleID) {
-  motor[moduleID].enableOutputs();
+  if (moduleID != 5) { // skip module 5 at connector 4 (only LED)
+    motor[moduleID].enableOutputs();
+  }
 }
 
 void motor_disable (byte moduleID) {
-  motor[moduleID].disableOutputs();
+  if (moduleID != 5) { // skip module 5 at connector 4 (only LED)
+    motor[moduleID].disableOutputs();
+  }
 }
 
 void motorsGoHome() {
@@ -111,7 +121,9 @@ void motorsGoHome() {
   }
 
   for (byte i = 0; i < 12; i++) {
-    motor_disable(i); // disable all motors
+    if (i != 5) { // skip module 5 at connector 4 (only LED)
+      motor_disable(i); // disable all motors
+    }
   }
 
   // run one motor a time
@@ -251,8 +263,8 @@ void motorsGoHome() {
             }
           }
         }
-      }
-    }
+      } // close: if (i != 5)
+    } // close for
     Serial.println("All motors are home");
   }
 
@@ -310,43 +322,47 @@ void motorsGoHome() {
 
     // disable all motors
     for (byte i = 0; i < 12; i++) {
-      motor[i].disableOutputs();
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
+        motor[i].disableOutputs();
+      }
     }
 
     // run one motor a time
     for (byte i = 0; i < 12; i++) {
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
 
-      // check if 'i' yields a motor that is enabled
-      // if not, just skip over this run in the for loop
-      if (module[i][5] == 1) {
+        // check if 'i' yields a motor that is enabled
+        // if not, just skip over this run in the for loop
+        if (module[i][5] == 1) {
 
-        // initialise motor
-        motor[i].setMaxSpeed(4000);
-        motor[i].setAcceleration(20000);
-        motor[i].setCurrentPosition(0);
-        motor[i].moveTo(motorDistance);
-        motor[i].enableOutputs();
+          // initialise motor
+          motor[i].setMaxSpeed(4000);
+          motor[i].setAcceleration(20000);
+          motor[i].setCurrentPosition(0);
+          motor[i].moveTo(motorDistance);
+          motor[i].enableOutputs();
 
-        while (true) {
-          motor[i].run();
-          if (motor[i].distanceToGo() == 0) {
-            if (motor[i].currentPosition() == motorDistance) {
-              motor[i].moveTo(0);
-            }
-            if (motor[i].currentPosition() == 0) {
-              currentCount ++;
-              if (currentCount == motorRunCount) {
-                motor[i].disableOutputs();
-                currentCount = 0;
-                break;
+          while (true) {
+            motor[i].run();
+            if (motor[i].distanceToGo() == 0) {
+              if (motor[i].currentPosition() == motorDistance) {
+                motor[i].moveTo(0);
               }
-              motor[i].moveTo(motorDistance);
+              if (motor[i].currentPosition() == 0) {
+                currentCount ++;
+                if (currentCount == motorRunCount) {
+                  motor[i].disableOutputs();
+                  currentCount = 0;
+                  break;
+                }
+                motor[i].moveTo(motorDistance);
+              }
             }
-          }
-        }
-      }
-    }
-  }
+          } // close while
+        } // close if (module[i][5] == 1)
+      } // close if (i != 5)
+    } // close for
+  } // close moduleTest_motor
 
 
   // Test all components
@@ -358,11 +374,13 @@ void motorsGoHome() {
 
     // initialise motors
     for (byte i = 0; i < 12; i++) {
-      motor[i].setMaxSpeed(16000);
-      motor[i].setAcceleration(20000);
-      motor[i].setCurrentPosition(0);
-      motor[i].moveTo(motorDistance);
-      motor[i].disableOutputs();
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
+        motor[i].setMaxSpeed(16000);
+        motor[i].setAcceleration(20000);
+        motor[i].setCurrentPosition(0);
+        motor[i].moveTo(motorDistance);
+        motor[i].disableOutputs();
+      }
     }
 
     // initialise leds
@@ -646,45 +664,49 @@ void motorsGoHome() {
 
     // initialise motors
     for (byte i = 0; i < 12; i++) {
-      motor[i].setMaxSpeed(16000);
-      motor[i].setAcceleration(40000);
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
+        motor[i].setMaxSpeed(16000);
+        motor[i].setAcceleration(40000);
+      }
     }
 
     for (byte i = 0; i < 12; i++) {
-      // check if 'i' yields a motor that is enabled
-      // if not, just skip over this run in the for loop
+      if (i != 5) { // skip module 5 at connector 4 (only LED)
 
-      Serial.print("Checking motor ");
-      Serial.println(i);
+        Serial.print("Checking motor ");
+        Serial.println(i);
 
-      if (module[i][5] == 1) {
-        if (keyframe[i][2] > 0) { // only run if target pos is larger than zero
+        // check if 'i' yields a motor that is enabled
+        // if not, just skip over this run in the for loop
+        if (module[i][5] == 1) {
+          if (keyframe[i][2] > 0) { // only run if target pos is larger than zero
 
-          Serial.println("— moving to start pos");
+            Serial.println("— moving to start pos");
 
-          motor_enable(i);
-          delay(20);
-
-          motor[i].moveTo(setMotorpos(i, keyframe[i][2])); // motor-number, position percentage (0-100)
-
-          while (motor[i].distanceToGo() > 0) {
-            motor[i].run();
-          }
-
-          if (motor[i].distanceToGo() == 0) {
-            motor_disable(i);
+            motor_enable(i);
             delay(20);
-            // Serial.print("— motor ");
-            // Serial.print(i);
-            Serial.println("— has arrived");
+
+            motor[i].moveTo(setMotorpos(i, keyframe[i][2])); // motor-number, position percentage (0-100)
+
+            while (motor[i].distanceToGo() > 0) {
+              motor[i].run();
+            }
+
+            if (motor[i].distanceToGo() == 0) {
+              motor_disable(i);
+              delay(20);
+              // Serial.print("— motor ");
+              // Serial.print(i);
+              Serial.println("— has arrived");
+            }
+          }
+          else {
+            Serial.println("— is already in position");
           }
         }
         else {
-          Serial.println("— is already in position");
+          Serial.println("— is disabled");
         }
-      }
-      else {
-        Serial.println("— is disabled");
       }
     }
     Serial.println("All motors arrived at start positions");
@@ -697,8 +719,8 @@ void motorsGoHome() {
   // Function is called by the onReceive event (interrupt)
   // TODO: test with byte instead of int
   void receiveEvents(int numBytes) {
-     // Serial.print("-> ");
-     // Serial.println(numBytes);
+    // Serial.print("-> ");
+    // Serial.println(numBytes);
 
     if (numBytes >= 2) {
 
