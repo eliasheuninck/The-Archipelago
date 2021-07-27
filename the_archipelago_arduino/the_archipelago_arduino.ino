@@ -235,7 +235,7 @@ int module[][8] = {
     /* 2 */ 10, // motor enable pin
     /* 3 */ 11, // motor step pin
     /* 4 */ 12, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 74850, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -247,7 +247,7 @@ int module[][8] = {
     /* 2 */ 5, // motor enable pin
     /* 3 */ 6, // motor step pin
     /* 4 */ 7, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 75350, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -259,7 +259,7 @@ int module[][8] = {
     /* 2 */ 15, // motor enable pin
     /* 3 */ 14, // motor step pin
     /* 4 */ 2, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 75350, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -271,7 +271,7 @@ int module[][8] = {
     /* 2 */ 44, // motor enable pin
     /* 3 */ 43, // motor step pin
     /* 4 */ 38, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 19750, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -299,7 +299,7 @@ int module[][8] = {
     // Pin 28 is available, but not used. Purely to avoid weird things happening when for-looping over the motor[] array.
     /* 3 */ 19, // motor step pin     (!) (stationary LED only, no motor or switches here)
     /* 4 */ 18, // motor dir pin      (!) (stationary LED only, no motor or switches here)
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging)). Since no motor, leave at zero
+    /* 5 */ 0, // == 0 —— motor debug enable (enable or disable motor (for debugging)). Since no motor, leave at zero
     /* 6 */ 111, // rail length (in motorsteps). (!) dummy value here
     /* 7 */ 0, // poll motor
   },
@@ -311,7 +311,7 @@ int module[][8] = {
     /* 2 */ 42, // motor enable pin
     /* 3 */ 41, // motor step pin
     /* 4 */ 40, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 14320, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -335,7 +335,7 @@ int module[][8] = {
     /* 2 */ 58, // motor enable pin   See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
     /* 3 */ 57, // motor step pin     See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
     /* 4 */ 56, // motor dir pin      See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 38470, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -347,7 +347,7 @@ int module[][8] = {
     /* 2 */ 63, // motor enable pin   See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
     /* 3 */ 62, // motor step pin     See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
     /* 4 */ 61, // motor dir pin      See: https://www.arduino.cc/en/Hacking/PinMappingSAM3X
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 27250, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -359,7 +359,7 @@ int module[][8] = {
     /* 2 */ 53, // motor enable pin
     /* 3 */ 52, // motor step pin
     /* 4 */ 50, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 31750, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   },
@@ -371,7 +371,7 @@ int module[][8] = {
     /* 2 */ 33, // motor enable pin
     /* 3 */ 47, // motor step pin
     /* 4 */ 49, // motor dir pin
-    /* 5 */ 0, // motor debug enable (enable or disable motor (for debugging))
+    /* 5 */ 1, // motor debug enable (enable or disable motor (for debugging))
     /* 6 */ 8110, // rail length (in motorsteps). (minus 250 for the zero point offset)
     /* 7 */ 0, // poll motor
   }
@@ -482,7 +482,7 @@ Bounce limitSwitch_debouncer[12] = {
   based on: https://www.aranacorp.com/en/communication-between-raspberry-pi-and-arduino-with-i2c/
 */
 # include <Wire.h>
-# define I2C_ADDRESS 8 // hexadecimal: 0x8 is decimal 8. This is the first available I2C address
+# define I2C_ADDRESS 0x08 // hexadecimal: 0x08 is decimal 8. This is the first available I2C address
 volatile bool I2C_dataReceived = false;
 volatile byte I2C_numberOfDigits = 0;
 volatile byte I2C_byteBuffer[10] = "";
@@ -503,6 +503,7 @@ void test();
 void setup() {
   // Open I2C bus
   Wire.begin(I2C_ADDRESS);
+  delay(2000);
 
   // Open serial communications
   // Don't wait for port to open, since it should work standalone
@@ -510,7 +511,8 @@ void setup() {
   Serial.println();
   Serial.println();
   Serial.println("serial is open");
-  Serial.println("Listening on I2C address 8");
+  Serial.print("Listening on I2C address: ");
+  Serial.println(I2C_ADDRESS);
   delay(500);
 
   // count the total amount of keyframes

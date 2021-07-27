@@ -697,8 +697,8 @@ void motorsGoHome() {
   // Function is called by the onReceive event (interrupt)
   // TODO: test with byte instead of int
   void receiveEvents(int numBytes) {
-    //  Serial.print("-> ");
-    //  Serial.println(numBytes);
+     // Serial.print("-> ");
+     // Serial.println(numBytes);
 
     if (numBytes >= 2) {
 

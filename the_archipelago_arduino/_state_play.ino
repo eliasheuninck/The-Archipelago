@@ -37,7 +37,6 @@ void play() { // state 0
     //    fake_time_millis_at_start = millis();
     previousState = state;
   }
-
   I2C_process_data(); // check for received I2C data
 
   // simulating the video time (when working without a raspberry pi conencted)
