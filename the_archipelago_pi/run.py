@@ -13,6 +13,8 @@ import sys
 
 address = 0x08
 
+# not actually used
+# TODO: delete and test
 def signal_term_handler(signal, frame):
 	print("SIGTERM received")
 	bus.close()
@@ -20,6 +22,8 @@ def signal_term_handler(signal, frame):
 	sys.exit(0)
 
 
+# is this actually useful?
+# TODO: delete and test
 with SMBus(1) as bus:
 	bus.close()
 
@@ -106,7 +110,7 @@ while True: # GET PLAYHEAD TIME
 		position = position_raw
    
     # print position (for debugging)
-	print("pos: ", position)
+	print(position)
 
 	# Manual looping
 	if position >= (duration - 300): # subtract a few milliseconds from the total duration for stability
@@ -123,7 +127,8 @@ while True: # GET PLAYHEAD TIME
 		try:
 			bus.write_i2c_block_data(address, 0, data) # send the data on I2C address 8, with an offset of 0
 		except:
-			print("bus write failed. closing and waiting")
+			# bus write failed. closing and waiting
+			print("I2C fail")
 			bus.close()
 			sleep(0.02)
 
