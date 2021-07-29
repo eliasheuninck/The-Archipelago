@@ -91,6 +91,11 @@ byte previousState = 255; // don't change this. (255 is the highest valueof a by
 const byte hardwareTest_id = 4;
 
 
+// Video
+const int vid_duration = 720000; // ms (12 minutes)
+const int vid_lead_in = 10000; // ms. Amount of black slug in the beginning of the video
+
+
 int total_keyframes = 255;  // auto-calculate the number of keyframes.
 // Don't change this. (255 is the highest valueof a byte. I use it as initializing value to be out of range)
 byte currentKeyframe = 0; // don't change this
@@ -487,8 +492,19 @@ Bounce limitSwitch_debouncer[12] = {
 volatile bool I2C_dataReceived = false;
 volatile byte I2C_numberOfDigits = 0;
 volatile byte I2C_byteBuffer[10] = "";
+int videoTime_assemble = 0; // used to collect I2C data bafore cleaning
 int videoTime = 0; // video time in millisec (this datatype is large enough for the running time of the video).
 int previousVideoTime = 0;
+const int I2C_skip = 500; // ms. Allow a certain jump in the time number stream
+
+
+bool looping = false; // flag for detecting loop point
+int loopBuffer[5] = {}; // initialise all 6 elements to 0 (default for ints)
+byte loopIndex = 0;
+byte detect_loop_state = 0;
+    // state 0: filling the loopBuffer
+    // state 1: check 1
+    // state 2: check 2
 
 // adding an explicit prototype of the main functions at the beginning of the sketch
 void idling();

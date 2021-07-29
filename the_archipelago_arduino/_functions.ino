@@ -747,17 +747,14 @@ void motorsGoHome() {
 
   // I2C: When a full array has been received, process it and put it in a global integer variable
   void I2C_process_data() {
-
     if (I2C_dataReceived == true) {
+      videoTime_assemble = 0; // reset the value to zero
 
       //    Serial.println();
       //    Serial.print("prevT: ");
       //    Serial.println(previousVideoTime);
       //    Serial.print("digits: ");
       //    Serial.println(I2C_numberOfDigits);
-
-      videoTime = 0; // reset the value to zero
-      int videoTime_assemble = 0;
 
       // add the separate bytes to a single integer
       for (byte i = 0; i < I2C_numberOfDigits; i++) {
@@ -767,42 +764,159 @@ void motorsGoHome() {
         // by multiplying it's value by 10 every time a new one gets added
         videoTime_assemble = videoTime_assemble * 10 + (int)I2C_byteBuffer[i];
       }
-      //
       //    Serial.print("MS: ");
       //    Serial.println(videoTime_assemble);
 
-
-      // ONLY assign when number is in a reasonable scale (below 13 minutes)
-      if (videoTime_assemble <= 780000) {
-
-        // TODO: AlLOW FOR ROLLOVER TO ZERO AFTER THE END
-
-        if (videoTime_assemble > previousVideoTime) {
-
-          //        Serial.print("previousVideoTime + 500 = ");
-          //        Serial.println(previousVideoTime + 500);
-
-          if (videoTime_assemble <= (previousVideoTime + 500)) { // be able to skip about 2 frames (2x 40 ms)
-            videoTime = videoTime_assemble; // only assign the value to videoTime when it's a bit bigger than the previous frame.
-            previousVideoTime = videoTime;
-            // Print out the integer (for debugging)
-            //    Serial.print("from pi: ");
-            Serial.println(videoTime);
-          } else {
-            Serial.println("BAD: MS > (prevT + 500)");
-            videoTime = previousVideoTime;
-          }
-        } else {
-          Serial.println("BAD: MS < prevT");
-          videoTime = previousVideoTime;
-        }
+      if (looping == false) {
+        I2C_verify_data();
       } else {
-        Serial.println("BAD: MS > 780000");
-        videoTime = previousVideoTime;
+        I2C_detect_loop();
       }
 
       // reset the flag
       I2C_dataReceived = false;
-
     } // close if
   } // close I2C_process_data()
+
+
+  void I2C_verify_data() {
+    videoTime = 0; // reset the value to zero
+
+    // ONLY assign when number is in a reasonable scale (within video duration)
+    if (videoTime_assemble <= vid_duration) {
+
+      // TODO: AlLOW FOR ROLLOVER TO ZERO AFTER THE END
+
+      if (videoTime_assemble > previousVideoTime) {
+
+        //        Serial.print("previousVideoTime + I2C_skip = ");
+        //        Serial.println(previousVideoTime + I2C_skip);
+
+        if (videoTime_assemble <= (previousVideoTime + I2C_skip)) { // be able to skip about 2 frames (2x 40 ms)
+
+          // videoTime is now verified and trusted for use
+          videoTime = videoTime_assemble; // only assign the value to videoTime when it's a bit bigger than the previous frame.
+
+          previousVideoTime = videoTime;
+          // Print out the integer (for debugging)
+          //    Serial.print("from pi: ");
+          Serial.println(videoTime);
+        } else {
+
+          Serial.println();
+          Serial.print("ERR: curr_t jumped (>= ");
+          Serial.print(I2C_skip);
+          Serial.print("ms): prev_t: ");
+          Serial.print(previousVideoTime);
+          Serial.print(" curr_t: ");
+          Serial.print(videoTime_assemble);
+          Serial.print(". Diff: ");
+          Serial.print(videoTime_assemble - previousVideoTime);
+          Serial.println("ms");
+          Serial.println("assigned prev_t to curr_t");
+          Serial.println();
+
+          videoTime = previousVideoTime;
+        }
+      } else {
+
+        Serial.println();
+        Serial.print("ERR: curr_t: ");
+        Serial.print(videoTime_assemble);
+        Serial.print(" < prev_t: ");
+        Serial.print(previousVideoTime);
+        Serial.print(". Diff: ");
+        Serial.print(previousVideoTime - videoTime_assemble);
+        Serial.println("ms");
+        Serial.println("assigned prev_t to curr_t");
+        Serial.println();
+
+        videoTime = previousVideoTime;
+      }
+    } else {
+      Serial.println();
+      Serial.print("ERR: curr_t out of bounds (> ");
+      Serial.print(vid_duration);
+      Serial.println("ms)");
+      Serial.println("assigned prev_t to curr_t");
+      Serial.println();
+
+      videoTime = previousVideoTime;
+    }
+  }
+
+  void I2C_detect_loop() {
+
+    // look at videoTime_assemble and find out when it rolls back to the beginning
+
+    // Fill buffer with values using a global counter
+    loopBuffer[loopIndex] = videoTime_assemble;
+    loopIndex++;
+
+    // if loopBuffer is 1 over max:
+    if (loopIndex == 6) {
+      // test the array
+
+      // set looped var false when encountering any false value
+      bool inrange = true;
+      bool incrementing = true;
+      bool looped = false;
+
+      // Test: are the values in range (below 10 seconds)?
+      for (byte i = 0; i < 6; i++) {
+        if (loopBuffer[i] > vid_lead_in) {
+          inrange = false;
+        }
+      }
+      if (inrange == false) {
+        loopIndex = 0;
+      }
+      if (inrange == true) {
+        Serial.println("Values in range");
+
+
+        // Test: is each entry larger than the previous one?
+        for (byte i = 0; i < 5; i++) {
+          if (loopBuffer[i] > loopBuffer[i + 1]) {
+            incrementing = false;
+          }
+        }
+        if (incrementing == false) {
+          loopIndex = 0;
+        }
+        if (incrementing == true) {
+          Serial.println("Values are incrementing");
+
+          Serial.println("Both tests OK. Looped = TRUE");
+          looped = true;
+        }
+      }
+
+      if (looped == true) {
+        Serial.println("Looped");
+        Serial.println("tested values for loop point:");
+
+        // print array
+        for (byte i = 0; i < 6; i++) {
+          Serial.println(loopBuffer[i]);
+        }
+        Serial.println();
+
+        // reset variables in order to be ready for the next loop
+        looping = false;
+        loopIndex = 0;
+
+        currentKeyframe = 12;
+
+        videoTime = 1;
+        previousVideoTime = 0;
+
+        I2C_verify_data();
+        Serial.print("Loop point detected: curr_t: ");
+        Serial.println(videoTime);
+
+        previousVideoTime = videoTime;
+        Serial.println("Assign curr_t to prev_t");
+      }
+    }
+  }

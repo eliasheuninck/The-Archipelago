@@ -180,7 +180,7 @@ void play() { // state 0
 
 
   else { // the end
-    Serial.println("finish any motor moves that are still happening");
+  Serial.println("finish any motor moves that are still happening");
     bool stillRunning = 1;
     while (stillRunning == 1) {
 
@@ -222,25 +222,11 @@ void play() { // state 0
     }
   }
 
-  Serial.println("Detect loop point");
-  // Detect loop point
-  bool looped = false;
-  while (looped == false) {
+  Serial.println("Detecting loop point...");
+  looping = true;
+
+  while (looping == true) {
     I2C_process_data(); // check for received I2C data
-    if (videoTime < 500) {
-      // reset currentKeyframe to 12 in order to be ready for the next loop
-      currentKeyframe = 12;
-      looped = true;
-    }
   }
-
-
-  //    while (true) {
-  //      //      Serial.println("PROGRAM STOPPED");
-  //      //      delay(1000); // TODO: now the arduino just waits after a single run. It should reset and be ready to receive the timestamp-stream from Rpi
-  //      // reset currentKeyframe to 12
-  //
-  //      // goto startpos
-  //    }
-} // close else (the end)
+}
 }
