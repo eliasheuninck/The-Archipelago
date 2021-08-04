@@ -908,8 +908,8 @@ void motorsGoHome() {
 
         currentKeyframe = 12;
 
-        videoTime = 1;
-        previousVideoTime = 0;
+        videoTime = videoTime_assemble;
+        previousVideoTime = videoTime_assemble;
 
         I2C_verify_data();
         Serial.print("Loop point detected: curr_t: ");
