@@ -507,20 +507,21 @@ byte detect_loop_state = 0;
     // state 2: check 2
 
 // adding an explicit prototype of the main functions at the beginning of the sketch
-// void idling();
-// void homing();
-// void startPos();
-// void sync();
 void play();
 void test();
 
 
-
-
 void setup() {
+
+  // Setup Power lEDS and turn them off
+  setupPowerLEDS();
+  for (byte i = 0; i < 12; i++) {
+    powerLED(i, 0); // turn off all LEDs
+  }
+
   // Open I2C bus
   Wire.begin(I2C_ADDRESS);
-  delay(2000);
+  delay(1000);
 
   // Open serial communications
   // Don't wait for port to open, since it should work standalone
@@ -539,12 +540,9 @@ void setup() {
 
   setupLimitSwitches();
   setupMotors();
-  setupPowerLEDS();
   setupInternalLED();
 
-  for (byte i = 0; i < 12; i++) {
-    powerLED(i, 0); // turn off all LEDs
-  }
+
 
 
   // give time to switch on the power (TODO: this is only for during development)

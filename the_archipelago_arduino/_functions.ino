@@ -20,19 +20,17 @@ void stopAllMotors() {
 
 void setupInternalLED() {
   pinMode(LED_BUILTIN, OUTPUT);
-  delay(500);
+  delay(10);
 
   // blink the built-in LED on the teensy a few times on startup
-  for (byte i = 0; i < 10; i++) {
-    internalLEDflash();
-    delay(90);
-  }
+  internalLEDflash_n(5);
 }
 
-void internalLED( bool state ) {
+void internalLED( byte state ) {
   if (state == 0 ) {
     digitalWrite(LED_BUILTIN, LOW);   // LED OFF
-  } else {
+  }
+  if (state == 1) {
     digitalWrite(LED_BUILTIN, HIGH);   // LED ON
   }
 }
@@ -41,6 +39,13 @@ void internalLEDflash() {
   internalLED(1);
   delay(30);
   internalLED(0);
+}
+
+void internalLEDflash_n(byte times) {
+  for (byte i = 0; i < times; i++) {
+    internalLEDflash();
+    delay(90);
+  }
 }
 
 
@@ -148,8 +153,6 @@ void motorsGoHome() {
             motor_enable(i);
 
             stopAllMotors(); // make sure all motion is stopped before starting to home
-            // setupInternalLED();
-            internalLED(0); // LED OFF when not homed
 
             // set all stages in the approaching state to start the homing
             //  0: not homing
@@ -250,7 +253,7 @@ void motorsGoHome() {
                 previous_homing_state = homing_state;
               }
 
-              internalLED(1); // LED on when homed (for debugging)
+              internalLEDflash_n(1); // LED on when homed (for debugging)
               motor_homed[i] = true;
 
               // blink power LED
@@ -694,6 +697,7 @@ void motorsGoHome() {
 
             if (motor[i].distanceToGo() == 0) {
               motor_disable(i);
+              internalLEDflash();
               delay(20);
               // Serial.print("— motor ");
               // Serial.print(i);

@@ -25,6 +25,8 @@ void play() { // state 0
 
     motorsGoHome();
     goToStartPos();
+    internalLEDflash_n(5);
+    internalLED(1);
     delay(20);
 
     // default: 12
@@ -71,6 +73,7 @@ void play() { // state 0
 
         // set LED
         powerLED(kf_module, kf_led);
+        internalLED(int(kf_led));
 
         if (kf_targetLoc >= 0) { // if this keyframe has a motor move
 
