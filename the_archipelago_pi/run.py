@@ -8,35 +8,17 @@ from pathlib import Path
 from time import sleep
 import subprocess
 
-import signal
-import sys
 
-address = 0x08
-
-# not actually used
-# TODO: delete and test
-def signal_term_handler(signal, frame):
-	print("SIGTERM received")
-	bus.close()
-	sleep(0.01)
-	sys.exit(0)
+# Video file
+# An absolute path is necesary
+VIDEO_PATH = Path("/home/pi/Desktop/archipelago/WO_04_LCR.mp4") 	# The Archipelago
+# VIDEO_PATH = Path("/home/pi/Documents/surround_test/test8.mp4") 	# Test video
 
 
-# is this actually useful?
-# TODO: delete and test
-with SMBus(1) as bus:
-	bus.close()
+address = 0x08 # I2C address of Arduino
 
-
-# The Archipelago video
-VIDEO_PATH = Path("/home/pi/Desktop/archipelago/WO_03_v2_LCR.mp4") # an absolute path is necesary
- 
-# Test video
-# VIDEO_PATH = Path("/home/pi/Documents/surround_test/test8.mp4") # an absolute path is necesary
-
-video_pause = 0 # Wait an additional amount of time (seconds) before the video loops
-				# to give time for the motors to reset
-				# or a longer break to make sure people don't go insane
+video_pause = 60 	# Wait an additional amount of time (seconds) before the video loops
+					# or a longer break to make sure people don't go insane at the exposition
 
 
 #  Autostart exit information
@@ -54,20 +36,22 @@ print("~/Desktop/autorun/run.py")
 print("~/.config/lxsession/LXDE-pi/autostart")
 print("--------------------------------------------")
 
-sleep(0.1)
 
 # Open a new terminal window so keyboard commands can be executed
-subprocess.call('lxterminal')
-
 sleep(0.1)
+subprocess.call('lxterminal')
+sleep(0.1)
+
 
 # show how much time is left before omxplayers starts
 for x in range(1, 0, -1):
 	print("{:02d}".format(x), " sec", end = '\r')
 	sleep(1)
 
+
 # Start omxplayer
 player = OMXPlayer(VIDEO_PATH, args='--fps 25 --no-osd -o alsa --layout 3.0 --blank=0xaa8899ff')
+
 
 # useful arguments information:
 # --loop
@@ -83,6 +67,7 @@ player = OMXPlayer(VIDEO_PATH, args='--fps 25 --no-osd -o alsa --layout 3.0 --bl
 # --no-boost-on-downmix = doesn't seem to work
 # --win 1000,50,1640,410    (this seems to crash the raspberry pi regularly)
 
+
 # Debug info
 # print("player: " + str(player))
 # print("List audio streams: " + str(player.list_audio()))
@@ -95,31 +80,40 @@ duration = player.duration() # duration in seconds (float)
 duration = int(float(duration * 1000)) # convert to milliseconds (int)
 print("duration in ms: ", duration)
 
+
+# Start video
 player.pause()
 sleep(0.5)
 player.play()
 
-while True: # GET PLAYHEAD TIME
-	signal.signal(signal.SIGTERM, signal_term_handler)
 
+# Send video time to Arduino
+while True:
 	# Make a query to position() inside an infinite loop
 	position_raw = int(float(player.position() * 1000)) # convert seconds to milliseconds
+	
 	
 	# Ignore any negative values
 	if position_raw >= 0:
 		position = position_raw
    
+   
     # print position (for debugging)
 	print(position)
 
+
 	# Manual looping
 	if position >= (duration - 300): # subtract a few milliseconds from the total duration for stability
+		print("Manual looping")
 		player.pause()
 		sleep(0.3)
+		print("starting video_pause")
 		sleep(video_pause)
+		print("stopping video_pause")
 		player.set_position(1) # set the playhead to 1 second into the video
 		sleep(0.5)
 		player.play()
+
 
 	# send the position to the arduino
 	with SMBus(1) as bus:
@@ -127,7 +121,7 @@ while True: # GET PLAYHEAD TIME
 		try:
 			bus.write_i2c_block_data(address, 0, data) # send the data on I2C address 8, with an offset of 0
 		except:
-			# bus write failed. closing and waiting
+			# bus write failed. closing and waiting a little before trying again
 			print("I2C fail")
 			bus.close()
 			sleep(0.02)
